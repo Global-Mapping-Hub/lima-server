@@ -1,8 +1,7 @@
-# Lima Server
-Live Mapping platform - server part
+# Lima Server (Live Mapping)
 
 ```shell
-ATTENTION: project was created in under a week so expect bugs and generally poor coding :)
+ATTENTION: platform was created in under a week so expect bugs and generally poor coding :)
 ```
 
 Server is written in NodeJS + MongoDB for user management. PostgreSQL PostGIS database and vector tiles server [Martin](https://github.com/urbica/martin/) are being used for storing/accessing drawn polygons.
