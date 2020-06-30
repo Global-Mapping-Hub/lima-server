@@ -6,33 +6,34 @@ class socketLogic {
 	}
 
 	initSocketLogic() {
+		// namespace for users' mice positions
+		this.io.of('/micemove').on('connection', (socket) => {
+			socket.on('user_mouse_update', (user, user_addition, lat, lng) => {
+				this.io.of('/micemove').emit('user_mouse_update', user, user_addition, lat, lng);
+			});
+		});
+
+		// for other stuff
 		this.io.on('connection', (socket) => {
-			// mouse movement
-			socket.on('user_mouse_update', (project, user, user_addition, lat, lng) => {
-				this.io.emit('user_mouse_update', project, user, user_addition, lat, lng);
-			});
-			
-
 			// geometry checks
-			socket.on('user_created_geometry', (project, user, geojson) => {
-				this.io.emit('user_created_geometry', project, user, geojson);
+			socket.on('user_created_geometry', (user, geojson) => {
+				this.io.emit('user_created_geometry', user, geojson);
 			});
-			socket.on('user_removed_geometry', (project, user, geoid) => {
-				this.io.emit('user_removed_geometry', project, user, geoid);
+			socket.on('user_removed_geometry', (user, geoid) => {
+				this.io.emit('user_removed_geometry', user, geoid);
 			});
-			socket.on('user_modified_geometry', (project, user, geoid) => {
-				this.io.emit('user_modified_geometry', project, user, geoid);
+			socket.on('user_modified_geometry', (user, geoid) => {
+				this.io.emit('user_modified_geometry', user, geoid);
 			});
-
 
 			// approval changes
 			// drawn items
-			socket.on('admin_changed_approval', (project, user, geoid, approved) => {
-				this.io.emit('admin_changed_approval', project, user, geoid, approved);
+			socket.on('admin_changed_approval', (user, geoid, approved) => {
+				this.io.emit('admin_changed_approval', user, geoid, approved);
 			});
 			// fishnet cell
-			socket.on('admin_changed_fishnet', (project, user, gid, status) => {
-				this.io.emit('admin_changed_fishnet', project, user, gid, status);
+			socket.on('admin_changed_fishnet', (user, gid, status) => {
+				this.io.emit('admin_changed_fishnet', user, gid, status);
 			});
 		});
 	}

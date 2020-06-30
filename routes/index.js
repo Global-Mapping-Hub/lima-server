@@ -96,7 +96,7 @@ router.post('/load', async function(req, res) {
 router.get('/load_fishnet', async function(req, res) {
 	var userInfo = req.user;
 	if (userInfo) {
-		DB.pgsql.many(`SELECT gid, st_asgeojson(geom,4326) AS geojson, done FROM monitoring.fishnet`).then(function(data) {
+		DB.pgsql.many(`SELECT gid, st_asgeojson(geom,4326) AS geojson, done FROM ${table_fishnet}`).then(function(data) {
 			// form a geojson object from db data
 			var geojson = {"type":"FeatureCollection", "features":[]}
 			data.forEach(obj => {
@@ -133,7 +133,7 @@ router.post('/fishnet_change', async function(req, res) {
 
 		// only admins can change fishnet status
 		if (editor) {
-			DB.pgsql.none(`UPDATE monitoring.fishnet SET done=$1 WHERE gid=$2`, [status, gid]).then(function() {
+			DB.pgsql.none(`UPDATE ${table_fishnet} SET done=$1 WHERE gid=$2`, [status, gid]).then(function() {
 				res.send({success: true, posted: `Fishnet <strong>${gid}</strong> updated successfully`});
 			}).catch(error => { onError(res, `Error changing status, please try again`, error) });
 		} else {
@@ -146,7 +146,7 @@ router.post('/fishnet_change', async function(req, res) {
 // load cell's info from the db, to generate up-to-date popup
 router.get('/fishcellinfo/:gid', async function(req, res) {
 	const gid = req.params.gid;
-	DB.pgsql.one(`SELECT gid, done FROM monitoring.fishnet WHERE gid=$1`, [gid]).then(function(data) {
+	DB.pgsql.one(`SELECT gid, done FROM ${table_fishnet} WHERE gid=$1`, [gid]).then(function(data) {
 		res.send(data);
 	}).catch(error => { onError(res, `Error, please try again`, error) });
 });
@@ -286,7 +286,7 @@ router.post('/mass_change_approval', async function(req, res) {
 							SET approved = $1
 							FROM (
 								SELECT f.*, b.*
-								FROM ${table_name} b, (SELECT geom AS fishnet_geom FROM monitoring.fishnet WHERE gid = $2) f
+								FROM ${table_name} b, (SELECT geom AS fishnet_geom FROM ${table_fishnet} WHERE gid = $2) f
 								WHERE ST_Intersects(b.geom, f.fishnet_geom) = true
 							) as sub
 							WHERE ${table_name}.geoid = sub.geoid`, [(approval) ? 'true' : 'false', gid]).then(function() {
