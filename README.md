@@ -15,12 +15,12 @@ Start mongo shell using the following command:
 mongo
 ```
 
-Within the shell, execute the following command to create a new datastore 'monitoring_db':
+Within the shell, execute the line below to create a new datastore 'monitoring_db':
 ```shell
 use monitoring_db;
 ```
 
-Create a new user following the schema in db/index.js, but the simplest way is to add the following line to the mapping_live.js and it will create a new user:
+Create a new user following the schema in db/index.js. The simplest way is to add this line to the mapping_live.js and it will create your first admin user:
 ```js
 DB.mongooseUserDetails.register({username:'admin', editor: true}, 'password');
 ```
