@@ -5,8 +5,7 @@
   "main": "mapping_live.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "npx nodemon mapping_live.js",
-    "start": "pm2 start mapping_live.js --watch"
+    "start": "node mapping_live.js"
   },
   "author": "",
   "license": "ISC",

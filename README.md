@@ -7,6 +7,14 @@ ATTENTION: platform was created in under a week so expect bugs and generally poo
 Server is written in NodeJS + MongoDB for user management. PostgreSQL PostGIS database and vector tiles server [Martin](https://github.com/urbica/martin/) are being used for storing/accessing drawn polygons.
 
 
+## Installation
+```shell
+git clone https://github.com/Global-Mapping-Hub/lima-server.git
+cd lima-server
+npm install
+```
+
+
 ## MongoDB Setup
 Start mongo shell using the following command:
 
