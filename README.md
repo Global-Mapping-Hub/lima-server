@@ -125,6 +125,5 @@ table_sources:
 
 If your table has a different name, you can change it in route/index.js
 
-## Additional route changes
-1) Change CORS origin url in mapping_live.js
-2) clientRedirect param in routes/index.js
+## Configuration
+All the settings can be changed in **config.js**

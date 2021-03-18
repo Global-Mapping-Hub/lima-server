@@ -1,12 +1,13 @@
 const express = require('express');
 const passport = require('passport');
 const router = express.Router();
-const clientRedirect = '/monitoring';
 const DB = require('../db');
+const config = require('../config');
 
 // globals
 const table_name = 'public.platform';
 const table_fishnet = 'public.fishnet';
+const table_markers = 'public.main_admin_markers';
 
 // functions
 const subGeoID = (geoid) => { return geoid.substring(0,15) }
@@ -23,10 +24,10 @@ const onError = (res, msg, error) => {
 router.post(`/login`, (req, res, callback) => {
 	passport.authenticate('local', (err, user, info) => {
 		if (err) return callback(err);
-		if (!user) return res.redirect(`${clientRedirect}?info=${info}`);
+		if (!user) return res.redirect(`${config.clientRedirect}?info=${info}`);
 		req.login(user, (loginError) => {
 			if (loginError) return callback(err);
-			return res.redirect(clientRedirect);
+			return res.redirect(config.clientRedirect);
 		})
 	})(req, res, callback);
 });
@@ -210,6 +211,80 @@ router.get('/delete/:geoid', async function(req, res) {
 
 			}
 		});
+	} else {
+		onError(res, `You are not authenticated, please reload the page`, '');
+	}
+});
+
+
+// load admin markers from the db
+router.get('/load_admin_markers', async function(req, res) {
+	var userInfo = req.user;
+	if (userInfo) {
+		DB.pgsql.many(`SELECT id, mid, date, st_asgeojson(geom,4326) AS geojson, mtype FROM ${table_markers}`).then(function(data) {
+			// form a geojson object from db data
+			var geojson = {"type":"FeatureCollection", "features":[]}
+			data.forEach(obj => {
+				var feature = {"type": "Feature", "geometry": '', "properties": {}};
+				Object.entries(obj).forEach(([key, value]) => {
+					if (key === 'geojson') {
+						feature.geometry = JSON.parse(value);
+					} else {
+						feature.properties[key] = value;
+					}
+				});
+				geojson.features.push(feature);
+			});
+			// push data back to user
+			res.send(geojson);
+		});
+	} else {
+		onError(res, `You are not authenticated, please reload the page`, '');
+	}
+});
+// save admin marker
+router.post('/add_admin_marker', async function(req, res) {
+	// get post parameters
+	const mid = req.body.mid;
+	const geom = req.body.geom;
+	const type = req.body.type;
+	const date = req.body.date;
+
+	// get user data
+	const userInfo = req.user;
+
+	// check if user logged in
+	if (userInfo) {
+		// get user details
+		if (userInfo.editor) {
+			// user is an admin, create a new marker
+			DB.pgsql.none(
+				`INSERT INTO ${table_markers}(mid, geom, mtype, date) VALUES($1, ST_SetSrid(ST_GeomFromGeoJSON($2), 4326), $3, $4)`, [mid, geom, type, date]
+			).then(function() {
+				res.send({success: true, posted: `Marker created successfully`});
+			}).catch(error => { onError(res, `ERROR during INSERT, please try again`, error) });
+		} else {
+			res.send({success: false, posted: 'You are not allowed to add markers'});
+		}
+	} else {
+		onError(res, `You are not authenticated, please reload the page`, '');
+	}
+});
+// remove admin marker
+router.post('/remove_admin_marker', async function(req, res) {
+	const mid = req.body.mid; // get post parameters
+	const userInfo = req.user; // get user data
+	// check if user logged in
+	if (userInfo) {
+		// get user details
+		if (userInfo.editor) {
+			// user is an admin, create a new marker
+			DB.pgsql.none(`DELETE FROM ${table_markers} WHERE mid=$1`, [mid]).then(function() {
+				res.send({success: true, posted: `Marker deleted successfully`});
+			}).catch(error => { onError(res, `Error deleting marker, please try again`, error) });
+		} else {
+			res.send({success: false, posted: 'You are not allowed to add markers'});
+		}
 	} else {
 		onError(res, `You are not authenticated, please reload the page`, '');
 	}

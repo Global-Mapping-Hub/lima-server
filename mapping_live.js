@@ -1,19 +1,23 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const r = require('./routes');
-const DB = require('./db');
 const compression = require('compression');
 
+const r = require('./routes');
+const SH = require('./routes/sentinel_hub');
+const DB = require('./db');
+
+const config = require('./config');
+
 const expressSession = require('express-session')({
-	secret: 'ax8bcdO8gRNqzMJqx45P', // change that
+	secret: config.expressSessionSecret,
 	resave: false,
 	saveUninitialized: false
 });
 
 // init express app
 const app = express();
-const apiPort = 4067;
+const apiPort = config.apiPort;
 
 // add socket.io
 const http = require('http').Server(app);
@@ -29,7 +33,7 @@ const sock = new socketLogic(io);
 // cors: allow requests from our client
 app.use(
 	cors({
-		origin: "https://example.org/monitoring/",
+		origin: config.corsOrigin,
 		methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
 		credentials: true // pass through session cookie from browser
 	})
@@ -58,3 +62,4 @@ r.passport.deserializeUser(DB.mongooseUserDetails.deserializeUser());
 
 // ROUTES
 app.use('/', r.router);
+app.use('/sh', SH.router);
